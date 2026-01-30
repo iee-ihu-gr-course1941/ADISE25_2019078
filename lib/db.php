@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/db_upass.php';   // ΜΟΝΟ αυτό το extra αρχείο
-
 function db(): PDO {
     static $pdo = null;
     if ($pdo !== null) {
@@ -43,6 +41,7 @@ function db(): PDO {
 
     return $pdo;
 }
+
 
 
 
