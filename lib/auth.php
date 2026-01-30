@@ -19,14 +19,21 @@ function read_json(): array {
 }
 
 function get_bearer_token(): ?string {
-    $headers = getallheaders();
-    $auth = $headers['Authorization'] ?? $headers['authorization'] ?? null;
+    $auth = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? null;
+
+    if (!$auth && function_exists('getallheaders')) {
+        $headers = getallheaders();
+        $auth = $headers['Authorization'] ?? $headers['authorization'] ?? null;
+    }
+
     if (!$auth) return null;
+
     if (preg_match('/Bearer\s+(.+)/', $auth, $m)) {
         return trim($m[1]);
     }
     return null;
 }
+
 
 function require_player(): array {
     $token = get_bearer_token();
