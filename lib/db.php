@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/db_upass.php';   // ⬅️ ΜΟΝΟ αυτό το extra αρχείο
+require_once __DIR__ . '/db_upass.php';   // ΜΟΝΟ αυτό το extra αρχείο
 
 function db(): PDO {
     static $pdo = null;
@@ -9,15 +9,15 @@ function db(): PDO {
         return $pdo;
     }
 
-    /* ===== ENV DETECTION (users.ihu.gr vs local) ===== */
-    $socket = '/home/student/iee/2019/iee2019078/mysql/run/mysql.sock';
+    /* ===== ENV DETECTION (users.it.teithe.gr vs local) ===== */
+    $socket  = '/home/student/iee/2019/iee2019078/mysql/run/mysql.sock';
     $isUsers = file_exists($socket);
 
     if ($isUsers) {
-        /* ===== USERS.IHU.GR ===== */
-        $dbname = 'adise25_2019078';
-        $user   = 'iee2019078';
-        $pass   = DB_UPASS;   // ⬅️ ΔΕΝ υπάρχει κωδικός εδώ
+        /* ===== USERS (socket) ===== */
+        $dbname = 'xeri_db';       // ✅ Η βάση που έφτιαξες στο users
+        $user   = 'iee2019078';    // ✅ το username σου
+        $pass   = 'iee2019078';        // ✅ από db_upass.php
 
         $dsn = "mysql:unix_socket={$socket};dbname={$dbname};charset=utf8mb4";
     } else {
@@ -36,12 +36,13 @@ function db(): PDO {
         $user,
         $pass,
         [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         ]
     );
 
     return $pdo;
 }
+
 
 
