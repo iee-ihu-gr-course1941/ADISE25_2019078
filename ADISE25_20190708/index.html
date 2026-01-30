@@ -1,0 +1,3054 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ξερή (Demo UI)</title>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <style>
+    :root{
+      --felt:#1f6b3a;
+      --felt2:#1a5c32;
+      --panel: rgba(0,0,0,.28);
+      --line: rgba(255,255,255,.18);
+      --txt: #f2f5f3;
+      --muted: rgba(255,255,255,.75);
+      --accent: #61dafb;
+      --danger: #ff6b6b;
+      --ok: #56f19a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 50% 35%, var(--felt) 0%, var(--felt2) 70%, #134325 100%);
+      color:var(--txt);
+    }
+    .wrap{
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    /* Top bar */
+    .topbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      padding: 12px 14px;
+      border:1px solid var(--line);
+      background: var(--panel);
+      border-radius: 14px;
+      backdrop-filter: blur(6px);
+    }
+    .topbar .left, .topbar .right{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    }
+    .pill{
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background: rgba(255,255,255,.06);
+      font-size: 13px;
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    input, button{
+      font: inherit;
+    }
+    input{
+      padding:9px 10px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      color: var(--txt);
+      outline:none;
+      width: 160px;
+    }
+    input::placeholder{color: rgba(255,255,255,.55)}
+    button{
+      padding:9px 12px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.10);
+      color: var(--txt);
+      cursor:pointer;
+    }
+    button:hover{ background: rgba(255,255,255,.16); }
+    button:disabled{opacity:.55; cursor:not-allowed}
+    .btn-primary{ border-color: rgba(97,218,251,.55); }
+    .btn-danger{ border-color: rgba(255,107,107,.6); }
+    .btn-ok{ border-color: rgba(86,241,154,.55); }
+
+    /* Table layout */
+    .table{
+      margin-top: 14px;
+      border-radius: 18px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      padding: 14px;
+      min-height: 520px;
+      position:relative;
+      overflow:hidden;
+    }
+    .table:before{
+      content:"";
+      position:absolute; inset:-60px;
+      background: radial-gradient(500px 250px at 50% 40%, rgba(255,255,255,.08) 0%, rgba(255,255,255,0) 70%);
+      pointer-events:none;
+    }
+
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      position:relative;
+      z-index:1;
+    }
+    .playerPanel{
+      width: 310px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: var(--panel);
+    }
+    .playerTitle{
+      display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+      margin-bottom: 8px;
+    }
+    .playerTitle b{font-size:14px}
+    .small{font-size:12px; color: var(--muted)}
+    .stats{
+      display:flex; gap:10px; flex-wrap:wrap;
+      font-size:12px; color: var(--muted);
+    }
+    .statBox{
+      padding:6px 8px;
+      border:1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,.06);
+    }
+
+    /* Center pile area */
+    .center{
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 26px;
+      min-height: 220px;
+    }
+    .pile{
+      position:relative;
+      width: 120px;
+      height: 150px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .pileLabel{
+      position:absolute;
+      bottom:-30px;
+      width: 160px;
+      text-align:center;
+      font-size:12px;
+      color: var(--muted);
+    }
+
+    /* Card */
+    .card{
+      width: 92px;
+      height: 128px;
+      border-radius: 12px;
+      border: 2px solid rgba(255,255,255,.35);
+      background: #f7f7f7;
+      color:#111;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      padding: 10px;
+      box-shadow: 0 10px 20px rgba(0,0,0,.35);
+      user-select:none;
+    }
+    .card .corner{
+      font-weight:700;
+      font-size: 20px;
+      line-height: 1;
+      display:flex; gap:6px; align-items:center;
+    }
+    .card .centerSym{
+      font-size: 38px;
+      text-align:center;
+      opacity:.9;
+      margin-top: -6px;
+    }
+    .red{ color:#c01616; }
+    .black{ color:#111; }
+
+    /* Card back */
+    .card.back{
+      background: linear-gradient(135deg, #0f5b87 0%, #0a3f61 60%, #08324f 100%);
+      border-color: rgba(255,255,255,.45);
+      color: rgba(255,255,255,.9);
+      overflow:hidden;
+      position:relative;
+    }
+    .card.back:after{
+      content:"";
+      position:absolute; inset:10px;
+      border-radius:10px;
+      border:1px dashed rgba(255,255,255,.45);
+      opacity:.8;
+    }
+    .backText{
+      font-weight:800;
+      font-size: 28px;
+      letter-spacing: 1px;
+      transform: rotate(-90deg);
+      opacity:.85;
+    }
+
+    /* Table top visible card stack effect */
+    .stack{
+      position:relative;
+      width: 92px; height: 128px;
+    }
+    .stack .shadowCard{
+      position:absolute;
+      width: 92px; height: 128px;
+      border-radius: 12px;
+      border: 2px solid rgba(255,255,255,.25);
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 10px 20px rgba(0,0,0,.25);
+    }
+
+    /* default: ΧΩΡΙΣ στοίβα (να φαίνεται μία κάρτα) */
+    .stack .shadowCard{ display:none; }
+
+    /* μόνο όταν υπάρχει πραγματική στοίβα */
+    .stack.hasStack .shadowCard{ display:block; }
+
+    .stack .shadowCard:nth-child(1){ transform: translate(6px, 6px); opacity:.45; }
+    .stack .shadowCard:nth-child(2){ transform: translate(3px, 3px); opacity:.65; }
+
+    /* ===== TABLE STACK: δείξε μέχρι 4 φύλλα σαν “σκάλα” ===== */
+    #tableStack{
+      position: relative;
+      width: 170px;
+      height: 132px;
+    }
+
+    /* κάθε layer κάρτας (πάνω/κάτω) */
+    #tableTopCard .stackCard{
+      position: absolute;
+      left: 30px;
+      top: -10px;
+      transform: 
+        translate(calc(var(--i) * -18px), calc(var(--i) * 7px))
+        scale(.90); 
+      z-index: calc(20 - var(--i)); 
+      pointer-events: none;         /* να μην “πιάνει” click */
+    }
+
+    
+    #tableTopCard .stackCard:not(:first-child) .card{
+      filter: brightness(.96);
+      opacity: .97;
+    }
+
+    #tableTopCard .card{
+      box-shadow: 0 8px 18px rgba(0,0,0,.32);
+    }
+
+
+    /* Bottom hand */
+    .handArea{
+      margin-top: 14px;
+      border-radius: 18px;
+      border:1px solid var(--line);
+      background: var(--panel);
+      padding: 12px;
+      position:relative;
+      z-index:1;
+    }
+    .handTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom: 10px;
+    }
+    .handCards{
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .handCard{
+      cursor:pointer;
+      transform: translateY(0);
+      transition: transform .12s ease, outline-color .12s ease, box-shadow .12s ease;
+      outline: 3px solid transparent;
+      outline-offset: 2px;
+    }
+    .handCard:hover{ transform: translateY(-4px); }
+    .handCard.selected{
+      outline-color: rgba(97,218,251,.95);
+      box-shadow: 0 0 0 6px rgba(97,218,251,.14);
+      transform: translateY(-6px);
+    }
+
+    /* ===== LOCK HAND όταν δεν είναι η σειρά σου ===== */
+    .handCards{
+      position: relative; 
+    }
+
+    .handCards.locked{
+      opacity: .92;                 
+      transform: scale(.985);       
+      transition: transform .15s ease, opacity .15s ease;
+    }
+
+    .handLockOverlay{
+      position:absolute;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+
+      border-radius: 14px;
+      border:1px dashed rgba(255,255,255,.28);
+      background: rgba(0,0,0,.35);
+
+      color: rgba(255,255,255,.85);
+      font-weight: 800;
+      letter-spacing: .2px;
+      user-select:none;
+    }
+
+    .handCards.locked .handLockOverlay{
+      display:flex;
+      animation: lockFadeIn .18s ease-out;
+    }
+
+    @keyframes lockFadeIn{
+      from{ opacity: 0; transform: translateY(6px) scale(.98); }
+      to  { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .handCards.locked .handLockOverlay .lockIcon{
+      display:inline-block;
+      animation: lockPulse .9s ease-in-out infinite;
+    }
+
+    @keyframes lockPulse{
+      0%   { transform: scale(1);   filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+      50%  { transform: scale(1.10); filter: drop-shadow(0 0 10px rgba(255,255,255,.35)); }
+      100% { transform: scale(1);   filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+    }
+
+    .handCards.locked .handLockOverlay .lockText{
+      position: relative;
+    }
+
+    .handCards.locked .handLockOverlay .lockText:after{
+      content:"";
+      position:absolute;
+      left:-30%;
+      top:0;
+      height:100%;
+      width:30%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+      transform: skewX(-20deg);
+      animation: lockShimmer 1.4s ease-in-out infinite;
+      opacity:.8;
+    }
+
+    @keyframes lockShimmer{
+      0%   { left:-30%; opacity:0; }
+      20%  { opacity:.8; }
+      60%  { left:105%; opacity:.8; }
+      100% { left:105%; opacity:0; }
+    }
+
+
+    .msg{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.22);
+      font-size: 13px;
+      color: var(--muted);
+      white-space: pre-wrap;
+    }
+    .msg.error{ border-color: rgba(255,107,107,.5); color: #ffd1d1; }
+    .msg.ok{ border-color: rgba(86,241,154,.45); color: #d5ffea; }
+    .msg.info{ border-color: rgba(97,218,251,.45); color: #d6f5ff; }
+
+    .turnBadge{
+      font-weight:700;
+      color: var(--accent);
+    }
+    .finishBadge{
+      font-weight:800;
+      color: #ffd36b;
+    }
+
+    .timerBadge{
+      min-width:64px;
+      text-align:center;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.35);
+    background: rgba(0,0,0,.35);
+    font-weight:700;
+    font-size:14px;
+    color:#e8fff2;
+    transition: background .25s, color .25s, box-shadow .25s;
+    }
+
+    /* σταθερό πλάτος & κεντράρισμα περιεχομένου timer */
+    #turnTimer{
+      min-width: 56px;        
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+
+    .timerBadge.warn{
+      background: rgba(255,80,80,.75);
+      color:#fff;
+      box-shadow: 0 0 12px rgba(255,80,80,.7);
+    }
+
+    .timerBadge.hidden{
+      opacity:.25;
+    }
+
+    @keyframes pulseTimer {
+      0%   { transform: scale(1);   box-shadow: 0 0 10px rgba(255,80,80,.45); }
+      50%  { transform: scale(1.08); box-shadow: 0 0 18px rgba(255,80,80,.85); }
+      100% { transform: scale(1);   box-shadow: 0 0 10px rgba(255,80,80,.45); }
+    }
+
+    .timerBadge.pulse{
+      animation: pulseTimer .7s ease-in-out infinite;
+    }
+
+    .playerPanel.activeTurn:not(.timerWarn):not(.timerPulse){
+      border-color: rgba(97,218,251,.9);
+      box-shadow: 0 0 18px rgba(97,218,251,.65);
+      background: linear-gradient(
+      180deg,
+      rgba(97,218,251,.12),
+      rgba(0,0,0,.25)
+      );
+      animation: turnPulse 1.6s ease-in-out infinite;
+    }
+
+    .playerPanel.inactiveTurn{
+      opacity: .75;
+    }
+
+    @keyframes turnPulse{
+      0%{ box-shadow: 0 0 10px rgba(97,218,251,.4); }
+      50%{ box-shadow: 0 0 22px rgba(97,218,251,.85); }
+      100%{ box-shadow: 0 0 10px rgba(97,218,251,.4); }
+    }
+
+    /* Panel γίνεται κόκκινο όπως το timer */
+    .playerPanel.timerWarn{
+      border-color: rgba(255,80,80,.95);
+      box-shadow: 0 0 18px rgba(255,80,80,.7);
+    }
+
+    .playerPanel.timerPulse{
+      animation: panelPulse .7s ease-in-out infinite !important;
+      border-color: rgba(255,80,80,.95);
+    }
+
+    @keyframes panelPulse{
+      0%   { transform: scale(1);    box-shadow: 0 0 12px rgba(255,80,80,.45); }
+      50%  { transform: scale(1.02); box-shadow: 0 0 22px rgba(255,80,80,.9); }
+      100% { transform: scale(1);    box-shadow: 0 0 12px rgba(255,80,80,.45); }
+    }
+
+    .chatWrap{
+      margin-top: 12px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      border-radius: 14px;
+      padding: 10px;
+    }
+
+    .chatHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom: 8px;
+    }
+
+    .chatBox{
+      overflow:auto;
+      padding: 8px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.20);
+      display:flex;
+      flex-direction:column;
+      align-items: flex-start !important;
+      min-width: 0; 
+      gap: 8px;
+      overflow-x: hidden;
+    }
+
+    .chatMsg{
+      display: inline-flex !important;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+
+      width: fit-content !important;
+      max-width: 78% !important;
+
+      min-width: 0 !important;
+      white-space: normal !important;
+      overflow-wrap: break-word !important;
+      word-break: break-word !important;
+
+      padding: 6px 9px !important;
+      border-radius: 16px !important;
+      border: 1px solid rgba(255,255,255,.14) !important;
+      background: rgba(255,255,255,.06) !important;
+      line-height: 1.2 !important;
+    }
+
+
+
+    @keyframes chatIn{
+      from{ opacity:0; transform: translateY(3px); }
+      to{ opacity:1; transform:none; }
+    }
+
+    .chatMsg.me{
+      align-self: flex-end !important;
+      background: rgba(97,218,251,.10) !important;
+      border-color: rgba(97,218,251,.22) !important;
+      border-top-right-radius: 6px !important;
+    }
+
+
+    .chatMsg:not(.me){
+      border-top-left-radius: 6px;
+    }
+
+    .chatMeta{
+      display:block;
+      margin-top: 3px;
+      opacity: .7;
+      font-size: 11px;
+      color: rgba(255,255,255,.62);
+    }
+
+    .chatSend{
+      margin-top: 8px;
+      display:flex;
+      gap: 8px;
+    }
+
+    #chatInput{
+      flex:1;
+      width:auto;
+    }
+
+    /* ====== NEW LAYOUT: game left + chat right ====== */
+    .gameLayout{
+      display:flex;
+      gap:14px;
+      align-items:stretch;
+      margin-top: 14px;
+    }
+
+    /* αριστερά: το παιχνίδι */
+    .gameMain{
+      flex:1;
+      min-width:0;
+    }
+
+
+    .chatSidebar{
+      width: 320px;
+      max-width: 35vw;
+      display: flex;
+
+      align-self: flex-start;
+
+      
+      position: sticky;
+      top: 18px;                         
+      height: calc(100vh - 36px);        
+    }
+
+    .chatSidebar .chatWrap{
+      margin-top: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+
+      min-height: 0;
+    }
+
+    .chatSidebar .chatBox{
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    @media (max-width: 900px){
+      .gameLayout{ flex-direction:column; }
+      .chatSidebar{
+        width:100%;
+        max-width:none;
+        position: static;   
+        height: auto; 
+      }
+
+      .chatSidebar .chatBox{
+        min-height: 200px;
+      }
+    }
+
+
+    .typingBubble{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 16px;
+      border-top-left-radius: 6px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.22);
+      min-width: 44px;        
+      animation: chatIn .15s ease-out;
+    }
+
+    /* dots */
+    .typingBubble .dot{
+      width: 6px;
+      height: 6px;
+      background: rgba(255,255,255,.9);
+      border-radius: 50%;
+      display: inline-block;
+      animation: typingDots 1.4s infinite ease-in-out;
+    }
+
+    .typingBubble .dot:nth-child(2){ animation-delay: .2s; }
+    .typingBubble .dot:nth-child(3){ animation-delay: .4s; }
+
+    @keyframes typingDots{
+      0%{ opacity:.3; transform: translateY(0); }
+      30%{ opacity:1; transform: translateY(-3px); }
+      60%{ opacity:.3; transform: translateY(0); }
+    }
+
+    .typingRow{
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .typingText{
+      font-size: 12px;
+      color: rgba(255,255,255,.75);
+      white-space: nowrap;
+    }
+    .winOverlay{
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+    }
+
+    .winCard{
+      width: min(520px, 92vw);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(0,0,0,.35);
+      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+      padding: 18px 18px 16px;
+      animation: winPop .18s ease-out;
+    }
+
+    @keyframes winPop{
+      from{ transform: translateY(8px) scale(.98); opacity:.0; }
+      to{ transform:none; opacity:1; }
+    }
+
+    .winTitle{
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+
+    .winSubtitle{
+      margin-top: 6px;
+      color: rgba(255,255,255,.78);
+      font-size: 14px;
+    }
+
+    .winScoreRow{
+      margin-top: 14px;
+      display:flex;
+      gap: 10px;
+    }
+
+    .winScoreBox{
+      flex:1;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      padding: 10px 12px;
+    }
+
+    .winScoreLabel{
+      font-size: 12px;
+      color: rgba(255,255,255,.75);
+    }
+
+    .winScoreVal{
+      margin-top: 4px;
+      font-size: 26px;
+      font-weight: 900;
+    }
+
+    .winActions{
+      margin-top: 14px;
+      display:flex;
+      gap: 10px;
+      justify-content:flex-end;
+    }
+
+    
+    .winCard.winMe{
+      border-color: rgba(97,218,251,.55);
+      box-shadow: 0 0 0 6px rgba(97,218,251,.10), 0 20px 60px rgba(0,0,0,.55);
+    }
+    .winCard.winOpp{
+      border-color: rgba(255,107,107,.55);
+      box-shadow: 0 0 0 6px rgba(255,107,107,.10), 0 20px 60px rgba(0,0,0,.55);
+    }
+    .winCard.winDraw{
+      border-color: rgba(255,211,107,.55);
+      box-shadow: 0 0 0 6px rgba(255,211,107,.10), 0 20px 60px rgba(0,0,0,.55);
+    }
+    /* ===== Screens (Auth / Lobby) ===== */
+    .screenOverlay{
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+    }
+
+    .screenCard{
+      width: min(560px, 92vw);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(0,0,0,.35);
+      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+      padding: 18px;
+      animation: winPop .18s ease-out;
+    }
+
+    .screenTitle{ font-size: 26px; font-weight: 900; }
+    .screenSub{ margin-top: 6px; color: rgba(255,255,255,.78); font-size: 14px; }
+    .screenForm{ margin-top: 14px; }
+    .screenLabel{ font-size: 12px; color: rgba(255,255,255,.75); }
+    .screenForm input{ width: 100%; margin-top: 8px; }
+    .screenActions{ margin-top: 12px; display:flex; gap:10px; justify-content:flex-end; }
+
+    .screenHint{
+      margin-top: 10px;
+      font-size: 12px;
+      color: rgba(255,255,255,.70);
+      min-height: 16px;
+    }
+
+    .screenGrid{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .screenBox{
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      padding: 12px;
+    }
+
+    @media (max-width: 700px){
+      .screenGrid{ grid-template-columns: 1fr; }
+    }
+
+    /*κρύψε topbar στην παραγωγή */
+    .topbar{ display:none; }
+
+    .miniBadges{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .miniBadges > *{
+      height: 36px;
+      display:flex;
+      align-items:center;
+    }
+
+    .miniBadge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.35);
+      background: rgba(0,0,0,.28);
+      color: rgba(255,255,255,.92);
+      font-weight:800;
+      font-size:14px;
+      user-select:none;
+      white-space:nowrap;
+    }
+
+
+    .miniBadge .ico{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      font-size: 16px;
+      line-height: 1;
+      opacity: .9;
+
+      position: relative;
+      top: -1.5px;  
+    }
+    .gameMain .table{ margin-top: 0; }
+    .gameMain, .chatSidebar{ display:flex; }
+    .gameMain .table, .chatSidebar .chatWrap{ flex:1; }
+
+    /* === Login decorative real cards === */
+    #screenAuth .screenCard{
+      position: relative;
+      overflow: hidden;
+    }
+
+    .loginCards{
+      position: absolute;
+      right: 110px;   
+      top: 40px;
+      pointer-events: none;
+      opacity: .28;
+    }
+
+    .loginCard{
+      position: absolute;
+      width: 120px;
+      height: 170px;
+      border-radius: 14px;
+      background: #f4f6f5;
+      box-shadow: 0 20px 40px rgba(0,0,0,.35);
+    }
+
+    .loginCards{
+      filter: blur(.2px);
+    }
+
+    @keyframes floatCards{
+      0%{ transform: translateY(0); }
+      50%{ transform: translateY(-4px); }
+      100%{ transform: translateY(0); }
+    }
+
+    .loginCards{
+      animation: floatCards 6s ease-in-out infinite;
+    }
+
+    /* login card change animation */
+    .loginCard{
+      transition: transform .6s ease, opacity .4s ease;
+      transform-style: preserve-3d;
+    }
+
+    .loginCard.flipOut{
+      opacity: 0;
+      transform: rotateY(90deg) scale(.95);
+    }
+
+    .loginCard.flipIn{
+      opacity: 1;
+      transform: rotateY(0deg) scale(1);
+    }
+
+
+    @keyframes popIn{
+      from{ transform:scale(.96); opacity:0 }
+      to{ transform:scale(1); opacity:1 }
+    }
+
+    .loseEmoji{
+      display:inline-block;
+      margin-right:8px;
+      animation: sadWiggle 1.2s ease-in-out infinite;
+    }
+
+    @keyframes sadWiggle{
+      0%{ transform:rotate(0) }
+      25%{ transform:rotate(-8deg) }
+      50%{ transform:rotate(8deg) }
+      75%{ transform:rotate(-6deg) }
+      100%{ transform:rotate(0) }
+    }
+
+    /* one-shot center emoji */
+    .fxOne{
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%,-50%) scale(.85);
+      font-size: 64px;
+      opacity: 0;
+      animation: fxOnePop 2s ease-out forwards;
+      filter: drop-shadow(0 10px 22px rgba(0,0,0,.35));
+      will-change: transform, opacity;
+    }
+
+    @keyframes fxOnePop{
+      0%   { opacity: 0; transform: translate(-50%,-50%) scale(.7); }
+      18%  { opacity: 1; transform: translate(-50%,-50%) scale(1.15); }
+      45%  { opacity: 1; transform: translate(-50%,-50%) scale(1.05); }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(.95); }
+    }
+
+    .trophy{
+      display:inline-block;        
+      margin-left: 8px;
+      transform-origin: 50% 85%;
+      animation: trophyWiggle 1s ease-in-out infinite;
+    }
+
+    @keyframes trophyWiggle{
+      0%   { transform: rotate(0) translateY(0); }
+      15%  { transform: rotate(-10deg) translateY(-2px); }
+      30%  { transform: rotate(10deg) translateY(-2px); }
+      45%  { transform: rotate(-8deg) translateY(-1px); }
+      60%  { transform: rotate(8deg) translateY(-1px); }
+      100% { transform: rotate(0) translateY(0); }
+    }
+    .handCard{
+      cursor:pointer;
+      transform: translateY(0);
+      transition: transform .12s ease, outline-color .12s ease, box-shadow .12s ease;
+      outline: 3px solid transparent;
+      outline-offset: 2px;
+    }
+
+    .handCard.dealAnim{
+      opacity: 0;
+      transform: translate(var(--from-x), var(--from-y)) scale(.9);
+      animation: dealCard .55s cubic-bezier(.22,.9,.3,1) forwards;
+    }
+
+    @keyframes dealCard{
+      to{
+        opacity: 1;
+        transform: translate(0,0) scale(1);
+      }
+    }
+
+    .handCards.locked .handCard:not(.dealAnim){
+      pointer-events: none;
+      opacity: .55;
+      transform: none;
+    }
+
+    .handCards.locked .handCard.dealAnim{
+      pointer-events: none;
+      opacity: 0;                
+    }
+
+    .sendIcon{
+      min-width: 44px;
+      padding: 9px 12px;
+      font-size: 18px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+    }
+
+    /* ===== Artistic round Info button (Lobby) ===== */
+    .screenCard{ position: relative; }
+
+    .lobbyInfoBtn{
+      position: absolute;
+      top: 14px;
+      right: 14px;
+
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      border: 1px solid rgba(255,255,255,.28);
+      background:
+        radial-gradient(
+          120% 120% at 30% 20%,
+          rgba(255,255,255,.18),
+          rgba(255,255,255,.04) 45%,
+          rgba(0,0,0,.25) 100%
+        );
+
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+
+      color: rgba(255,255,255,.92);
+      cursor: pointer;
+      user-select:none;
+
+      box-shadow:
+        0 10px 28px rgba(0,0,0,.35),
+        inset 0 1px 1px rgba(255,255,255,.35);
+
+      transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        border-color .18s ease;
+    }
+
+    /* soft halo */
+    .lobbyInfoBtn::after{
+      content:"";
+      position:absolute;
+      inset:-6px;
+      border-radius:50%;
+      background: radial-gradient(
+        circle,
+        rgba(97,218,251,.35),
+        transparent 65%
+      );
+      opacity: .45;
+      z-index:-1;
+    }
+
+    .lobbyInfoBtn:hover{
+      transform: translateY(-2px) scale(1.03);
+      border-color: rgba(97,218,251,.75);
+      box-shadow:
+        0 14px 36px rgba(0,0,0,.45),
+        0 0 18px rgba(97,218,251,.45),
+        inset 0 1px 1px rgba(255,255,255,.45);
+    }
+
+    .lobbyInfoBtn:active{
+      transform: translateY(0) scale(.98);
+    }
+
+
+    .lobbyInfoBtn .iIcon{
+      font-family: "Times New Roman", Times, serif;
+      font-style: italic;
+      font-weight: 700;
+
+      font-size: 35px;
+      line-height: 1;
+
+      transform: translate(0.05px, -1.5px);
+
+      text-shadow: 0 1px 2px rgba(0,0,0,.45);
+    }
+
+    /* ===== INFO OVERLAY (glass like screenCard/winCard) ===== */
+    .infoOverlay{
+      position: fixed;
+      inset: 0;
+      z-index: 9500;
+      display: none;
+
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    .infoOverlay[aria-hidden="false"]{
+      display:flex !important;
+    }
+
+    .infoCard{
+      width: min(760px, 94vw);
+      height: min(82vh, 760px); 
+      overflow: hidden;
+
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(0,0,0,.35);
+      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+
+      animation: winPop .18s ease-out;
+
+      display: flex;              /* ✅ */
+      flex-direction: column;     /* ✅ */
+    }
+
+    /* header glass strip */
+    .infoHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+
+      padding: 14px 14px 10px;
+
+      border-bottom: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+    }
+
+    /* title */
+    .infoTitle{
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      color: rgba(255,255,255,.92);
+    }
+
+    /* close button = μικρό “pill/glass” */
+    .infoClose{
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      color: rgba(255,255,255,.92);
+
+      cursor: pointer;
+      user-select:none;
+
+      box-shadow:
+        0 10px 24px rgba(0,0,0,.25),
+        inset 0 1px 1px rgba(255,255,255,.22);
+
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+    }
+    .infoClose:hover{
+      background: rgba(255,255,255,.14);
+      border-color: rgba(97,218,251,.55);
+      transform: translateY(-1px);
+    }
+    .infoClose:active{
+      transform: translateY(0) scale(.98);
+    }
+
+    .infoBody{
+      padding: 14px;
+      overflow: auto;
+      flex: 1 1 auto;  
+      min-height: 0;    
+      color: rgba(255,255,255,.88);
+    }
+
+    .infoBody h3{ margin: 0 0 10px; font-size: 18px; }
+    .infoBody h4{
+      margin: 14px 0 8px;
+      font-size: 14px;
+      color: rgba(255,255,255,.86);
+    }
+    .infoBody p, .infoBody li{
+      font-size: 13px;
+      line-height: 1.48;
+      color: rgba(255,255,255,.84);
+    }
+    .infoBody ul{ margin: 8px 0 0 18px; }
+
+    /* μικρά “glass” blocks για να σπάει το κείμενο */
+    .infoBlock{
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin-top: 10px;
+    }
+
+    /* όταν είναι ανοιχτό το info */
+    body.info-open{
+      overflow: hidden; 
+    }
+
+    .infoFooter{
+      border-top: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+
+      display:flex;
+      align-items:center;      
+      justify-content:center;  
+
+      min-height: 96px;        
+      padding: 0 14px;         
+    }
+
+
+    #btnInfoCloseBottom{
+      min-width: 180px;
+      font-weight: 600;
+    }
+
+    /* ===== Glass button στο footer ===== */
+    .infoGlassBtn{
+      min-width: 220px;
+      padding: 14px 22px;
+
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.28);
+
+      background:
+        radial-gradient(
+          120% 120% at 30% 20%,
+          rgba(255,255,255,.22),
+          rgba(255,255,255,.08) 45%,
+          rgba(0,0,0,.35) 100%
+        );
+
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+
+      color: rgba(255,255,255,.95);
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: .2px;
+
+      cursor: pointer;
+      user-select: none;
+
+      box-shadow:
+        0 14px 36px rgba(0,0,0,.45),
+        inset 0 1px 1px rgba(255,255,255,.35);
+
+      transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        border-color .18s ease;
+    }
+
+    .infoGlassBtn:hover{
+      transform: translateY(-2px) scale(1.03);
+      border-color: rgba(97,218,251,.85);
+      box-shadow:
+        0 18px 44px rgba(0,0,0,.55),
+        0 0 22px rgba(97,218,251,.55),
+        inset 0 1px 1px rgba(255,255,255,.45);
+    }
+
+    .infoGlassBtn:active{
+      transform: translateY(0) scale(.97);
+    }
+
+    #tableStack > .shadowCard{
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+  <!-- AUTH / LOBBY SCREENS -->
+<div id="screenAuth" class="screenOverlay">
+  <div class="screenCard">
+    <!-- decorative login cards -->
+    <div class="loginCards">
+      <div class="card loginCard c1 red">
+        <div class="corner">A <span>♥</span></div>
+        <div class="centerSym">♥</div>
+        <div class="corner" style="justify-content:flex-end">A <span>♥</span></div>
+      </div>
+
+      <div class="card loginCard c2 black">
+        <div class="corner">K <span>♠</span></div>
+        <div class="centerSym">♠</div>
+        <div class="corner" style="justify-content:flex-end">K <span>♠</span></div>
+      </div>
+
+      <div class="card loginCard c3 red">
+        <div class="corner">10 <span>♦</span></div>
+        <div class="centerSym">♦</div>
+        <div class="corner" style="justify-content:flex-end">10 <span>♦</span></div>
+      </div>
+    </div>
+    <div class="screenTitle">Ξερή</div>
+    <div class="screenSub">Σύνδεση για να ξεκινήσεις.</div>
+
+    <div class="screenForm">
+      <div class="screenLabel">Username</div>
+      <input id="authUsername" placeholder="π.χ. eva" maxlength="24" />
+      <div class="screenActions">
+        <button class="btn-primary" id="btnAuthLogin">Login</button>
+        <button class="btn-ok" id="btnAuthGuest">Use as guest</button>
+      </div>
+      <div class="screenHint" id="authHint">—</div>
+    </div>
+  </div>
+</div>
+
+<div id="screenLobby" class="screenOverlay" style="display:none;">
+  <div class="screenCard">
+    <div class="screenTitle">Lobby</div>
+    <button class="lobbyInfoBtn" id="btnInfoLobby" title="Πώς παίζεται">
+      <span class="iIcon">i</span>
+    </button>
+    <div class="screenSub">
+      Συνδέθηκες ως <b id="lobbyUser">—</b>. Διάλεξε τι θες να κάνεις.
+    </div>
+
+    <div class="screenGrid">
+      <div class="screenBox">
+  <div class="screenLabel">Create game</div>
+
+  <div class="screenLabel" style="margin-top:8px;">Χρόνος κίνησης (δευτ.)</div>
+  <select id="lobbyTurnSeconds" style="width:100%; margin-top:8px;">
+    <option value="15">15s</option>
+    <option value="30">30s</option>
+    <option value="45">45s</option>
+    <option value="60" selected>60s</option>
+    <option value="90">90s</option>
+    <option value="120">120s</option>
+  </select>
+
+  <div class="screenLabel" style="margin-top:12px;">Σκορ νίκης</div>
+  <select id="lobbyTargetScore" style="width:100%; margin-top:8px;">
+    <option value="1">1</option>
+    <option value="51" selected>51</option>
+    <option value="101">101</option>
+    <option value="151">151</option>
+    <option value="201">201</option>
+    <option value="251">251</option>
+    <option value="301">301</option>
+  </select>
+
+  <button class="btn-ok" id="btnLobbyCreate" style="width:100%; margin-top:12px;">Create</button>
+  <div class="screenHint" id="lobbyCreateHint">—</div>
+</div>
+
+      <div class="screenBox">
+        <div class="screenLabel">Join game</div>
+        <input id="lobbyGameId" placeholder="game_id" style="width:100%; margin-top:8px;" />
+        <button class="btn-primary" id="btnLobbyJoin" style="width:100%; margin-top:10px;">Join</button>
+        <button class="btn-ok" id="btnLobbyBrowse" style="width:100%; margin-top:10px;">
+          Browse waiting tables
+        </button>
+        <div class="screenHint" id="lobbyJoinHint">—</div>
+      </div>
+    </div>
+
+    <div class="screenActions" style="justify-content:space-between; margin-top:12px;">
+      <button class="btn-danger" id="btnLobbyLogout">Logout</button>
+      <div class="screenHint" id="lobbyHint">—</div>
+    </div>
+  </div>
+</div>
+
+<div id="screenWaiting" class="screenOverlay" style="display:none;">
+  <div class="screenCard">
+    <div class="screenTitle">Waiting tables</div>
+    <div class="screenSub">Διάλεξε τραπέζι για να μπεις.</div>
+
+    <div class="screenBox" style="margin-top:14px;">
+      <button class="btn-primary" id="btnWaitingRefresh" style="width:100%;">
+        Refresh list
+      </button>
+
+      <div id="waitingList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
+        <div class="small" style="opacity:.8;">—</div>
+      </div>
+
+      <div class="screenHint" id="waitingHint">—</div>
+    </div>
+
+    <div class="screenActions" style="justify-content:space-between; margin-top:12px;">
+      <button class="btn-danger" id="btnWaitingBack">Πίσω</button>
+      <div class="screenHint" id="waitingStatus">—</div>
+    </div>
+  </div>
+</div>
+
+<div id="infoOverlay" class="infoOverlay" aria-hidden="true">
+  <div class="infoCard" role="dialog" aria-modal="true" aria-label="Πώς παίζεται η Ξερή">
+
+    <div class="infoHead">
+      <div class="infoTitle">Πώς παίζεται η Ξερή</div>
+    </div>
+
+    <div class="infoBody">
+
+      <div class="infoBlock">
+        <p>
+          Η <b>Ξερή</b> είναι ελληνικό παιχνίδι τράπουλας. Στη δική μας έκδοση παίζεται με <b>2 παίκτες</b> και ο στόχος είναι
+          να φτάσεις/ξεπεράσεις το <b>Σκορ Νίκης</b> (π.χ. 51) που επιλέγεται από το Lobby πριν ξεκινήσει το παιχνίδι.
+        </p>
+      </div>
+
+      <div class="infoBlock">
+        <h4>🎮 Setup (όπως παίζεται εδώ)</h4>
+        <ul>
+          <li>Δύο παίκτες: <b>Εσύ</b> και <b>Αντίπαλος</b>.</li>
+
+          <li>
+            Στην αρχή γίνεται <b>μοίρασμα 6 φύλλων</b> σε κάθε παίκτη
+            και τοποθετούνται <b>4 φύλλα στο τραπέζι</b>.
+          </li>
+
+          <li>
+            Στο κέντρο της οθόνης βρίσκεται το <b>Τραπέζι</b>,
+            ενώ <b>δεξιά</b> εμφανίζεται το <b>Chat</b>.
+          </li>
+
+          <li>
+            Πάνω στο <b>Τραπέζι</b> υπάρχουν <b>δύο στοίβες</b>:
+            <ul>
+              <li>
+                Η <b>αριστερή στοίβα</b> είναι η <b>Τράπουλα</b> και δείχνει
+                τα <b>φύλλα που απομένουν για μοίρασμα</b>.
+              </li>
+              <li>
+                Η <b>δεξιά στοίβα</b> δείχνει έως και <b>4 από τα τελευταία φύλλα</b>
+                που έχουν <b>παιχτεί στο τραπέζι</b>
+                (με εμφανές το <b>top</b> φύλλο).
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+
+      <div class="infoBlock">
+        <h4>⏱️ Σειρά & Χρόνος κίνησης</h4>
+       <ul>
+          <li>
+            Παίζει ένας-ένας. Το UI δείχνει καθαρά
+            <b>«Η σειρά σου»</b> ή <b>«Περίμενε»</b>.
+          </li>
+
+          <li>
+            Κάθε γύρος κίνησης έχει <b>timer</b>, ο οποίος ρυθμίζεται από το <b>Lobby</b>
+            στις τιμές: <b>15</b>, <b>30</b>, <b>45</b>, <b>60</b>, <b>90</b> ή <b>120</b> δευτερόλεπτα.
+          </li>
+
+          <li>
+            Όταν <b>δεν είναι η σειρά σου</b>, το χέρι σου κλειδώνει
+            και εμφανίζεται overlay <b>«Περίμενε τη σειρά σου»</b>.
+          </li>
+
+          <li>
+            Όταν ο χρόνος πέσει <b>κάτω από 10 δευτερόλεπτα</b>,
+            το <b>timer</b> και το <b>panel</b> γίνονται <b>κόκκινα</b>
+            ως προειδοποίηση.
+          </li>
+
+          <li>
+            Στα <b>τελευταία 3 δευτερόλεπτα</b>,
+            ακούγεται <b>χαρακτηριστικός ήχος</b>
+            για επιπλέον βοήθεια προς τον παίκτη.
+          </li>
+
+          <li>
+            Αν ένας παίκτης <b>δεν κάνει καμία κίνηση</b> μέσα στον
+            <b>επιτρεπόμενο χρόνο</b>, τότε <b>χάνει αυτόματα το παιχνίδι</b>.
+          </li>
+        </ul>
+      </div>
+
+      <div class="infoBlock">
+        <h4>🃏 Πώς κάνεις κίνηση</h4>
+        <ul>
+          <li>Κάνεις κλικ σε ένα φύλλο από το χέρι σου για να το <b>επιλέξεις</b>.</li>
+          <li>Μετά πατάς <b>Play selected</b> για να το παίξεις στο τραπέζι.</li>
+          <li>Αν αλλάξεις γνώμη, πάτα <b>Clear</b> για να καθαρίσει η επιλογή.</li>
+        </ul>
+      </div>
+
+      <div class="infoBlock">
+        <h4>🧲 Πότε “μαζεύεις” (capture)</h4>
+        <p style="margin-top:0;">
+          Στο δικό μας παιχνίδι, το “μάζεμα” βασίζεται στο <b>τελευταίο φύλλο</b> του τραπεζιού (το top).
+        </p>
+        <ul>
+          <li>
+            Αν ρίξεις φύλλο <b>ίδιας αξίας</b> με το top φύλλο του τραπεζιού, τότε <b>μαζεύεις</b> όλα τα φύλλα του τραπεζιού.
+          </li>
+          <li>
+            Αν ρίξεις <b>Βαλέ (J)</b>, τότε <b>μαζεύεις σε κάθε περίπτωση</b> (ανεξάρτητα από το top).
+          </li>
+        </ul>
+        <p class="small" style="margin:10px 0 0; opacity:.85;">
+          Tip: Το UI δείχνει μήνυμα τύπου <b>capture=true</b> όταν έγινε μάζεμα.
+        </p>
+      </div>
+
+      <div class="infoBlock">
+        <h4>✨ Τι είναι “Ξερή”</h4>
+
+        <p style="margin-top:0;">
+          Στο δικό μας παιχνίδι, <b>Ξερή</b> επιτυγχάνεται όταν στο τραπέζι υπάρχει <b>μόνο ένα φύλλο</b>
+          και ο αντίπαλος το <b>μαζέψει</b> με την κίνησή του, αφήνοντας το τραπέζι <b>εντελώς άδειο</b>.
+        </p>
+
+        <ul>
+          <li>
+            <b> Η ξερή με Βαλέ (J)</b> είναι μία ειδική περίπτωση που ισχύει <b>μόνο</b> όταν το μοναδικό φύλλο που υπάρχει στο τραπέζι είναι <b>Βαλές (J)</b>
+               και ο αντίπαλος μαζέψει παίζοντας επίσης <b>Βαλέ (J)</b>.
+          </li>
+          <li>
+            Σε <b>κάθε άλλη περίπτωση</b>, <b>δεν</b> θεωρείται <b>Ξερή με Βαλέ</b> και τα φύλλα που μαζεύτηκαν
+            <b>μετράνε ως κανονικοί πόντοι</b>.
+          </li>
+        </ul>
+
+        <p class="small" style="margin:10px 0 0; opacity:.85;">
+          Tip: Το UI εμφανίζει αντίστοιχη ένδειξη <b>«ΞΕΡΗ!»</b> ή <b>«ΞΕΡΗ με ΒΑΛΕ!»</b> όταν συμβεί.
+        </p>
+      </div>
+
+      <div class="infoBlock">
+        <h4>📊 Πώς μετράει το σκορ (στη δική μας έκδοση)</h4>
+
+        <div class="infoBlock" style="margin-top:10px;">
+          <h4 style="margin-top:0;">✨ Bonus από “Ξερή”</h4>
+          <ul>
+            <li><b>Απλή Ξερή:</b> +10 πόντοι</li>
+            <li><b>Ξερή με Βαλέ (J):</b> +20 πόντοι</li>
+          </ul>
+        </div>
+
+        <div class="infoBlock" style="margin-top:10px;">
+          <h4 style="margin-top:0;">🃏 Πόντοι από συγκεκριμένα φύλλα</h4>
+          <ul>
+            <li><b>2♣ (το δύο σπαθί):</b> +1 πόντος</li>
+            <li><b>10♦ (το δέκα καρό):</b> +2 πόντοι</li>
+            <li><b>Όλοι οι Βαλέδες (J):</b> +1 πόντος ο καθένας</li>
+            <li><b>Όλες οι Ντάμες (Q):</b> +1 πόντος η καθεμία</li>
+            <li><b>Όλοι οι Ρήγες (K):</b> +1 πόντος ο καθένας</li>
+            <li><b>Όλοι οι Άσσοι (A):</b> +1 πόντος ο καθένας</li>
+            <li><b>Όλα τα δεκάρια (10) εκτός από το 10♦:</b> +1 πόντοι το καθένα</li>
+          </ul>
+        </div>
+
+        <div class="infoBlock" style="margin-top:10px;">
+          <h4 style="margin-top:0;">📦 Πλειοψηφία φύλλων</h4>
+          <ul>
+            <li>
+              <b>Ο παίκτης που έχει μαζέψει τα περισσότερα φύλλα συνολικά:</b>
+              +3 πόντοι
+            </li>
+            <li>
+              Σε περίπτωση που οι παίκτες έχουν <b>ίσο αριθμό φύλλων</b>,
+              <b>κανένας</b> δεν παίρνει τους πόντους.
+            </li>
+          </ul>
+        </div>
+
+        <p class="small" style="margin:10px 0 0; opacity:.85;">
+          Όλα τα παραπάνω προστίθενται στο <b>Score</b> και φαίνονται live στα panels (Εσύ/Αντίπαλος).
+        </p>
+      </div>
+
+      <div class="infoBlock">
+        <h4>🏁 Πότε τελειώνει το παιχνίδι</h4>
+        <ul>
+          <li>
+            Το παιχνίδι τελειώνει όταν κάποιος φτάσει ή ξεπεράσει το
+            <b>Σκορ Νίκης</b> (π.χ. 51 / 101 / 151…),
+            το οποίο έχει <b>επιλεγεί από τον δημιουργό του τραπεζιού (δωματίου)</b>.
+          </li>
+          <li>Μόλις τελειώσει, εμφανίζεται το <b>overlay αποτελέσματος</b> με τα τελικά σκορ.</li>
+          <li>Αν βγει ισοπαλία, το παιχνίδι χαρακτηρίζεται ως <b>Ισοπαλία</b>.</li>
+        </ul>
+      </div>
+
+      <div class="infoBlock">
+        <h4>🔁 Rematch (Νέο παιχνίδι)</h4>
+        <ul>
+          <li>
+            Μετά το τέλος, μπορείς να πατήσεις <b>Νέο παιχνίδι</b> για rematch.
+          </li>
+          <li>
+            Αν ο αντίπαλος ζητήσει πρώτος rematch, θα δεις μήνυμα ότι
+            <b>περιμένει</b> να πατήσεις κι εσύ.
+          </li>
+          <li>
+            Αν ο αντίπαλος έχει αποχωρήσει, εμφανίζεται κατάλληλη ειδοποίηση
+            ότι <b>δεν μπορεί να ξεκινήσει νέο παιχνίδι</b> και το rematch
+            <b>παραμένει απενεργοποιημένο</b>.
+          </li>
+        </ul>
+      </div>
+
+      <div class="infoBlock">
+        <h4>💬 Chat</h4>
+        <ul>
+          <li>
+            Υπάρχει <b>chat</b> στα δεξιά της οθόνης για γρήγορη επικοινωνία
+            και αλληλεπίδραση με τον αντίπαλο.
+          </li>
+          <li>
+            Εμφανίζεται ένδειξη <b>«Ο/Η … πληκτρολογεί»</b> όταν ο αντίπαλος γράφει μήνυμα.
+          </li>
+        </ul>
+      </div>
+
+      <div class="infoBlock">
+        <h4>🧠 Mini tips</h4>
+        <ul>
+          <li>
+            Ο <b>J (Βαλές)</b> είναι ισχυρό φύλλο για μάζεμα·
+            χρησιμοποίησέ το στρατηγικά και <b>όχι βιαστικά</b>, ειδικά σε κρίσιμες φάσεις.
+          </li>
+
+          <li>
+            Παρακολούθα πάντα το <b>top φύλλο</b> του τραπεζιού:
+            το μάζεμα με <b>ίδια αξία</b> είναι ο βασικός και πιο συχνός τρόπος μαζέματος.
+          </li>
+
+          <li>
+            Δώσε προσοχή στον <b>αριθμό των φύλλων</b> που υπάρχουν στο τραπέζι
+            και σε όσα <b>έχουν ήδη παιχτεί</b> και σε αυτά <b>που κρατάς στο χέρι</b>,
+            αυτό σε βοηθά να <b>προβλέπεις πιθανό μάζεμα ή Ξερή</b>.
+          </li>
+
+          <li>
+            Μην ξεχνάς την <b>πλειοψηφία φύλλων</b>:
+            ο παίκτης που μαζεύει τα <b>περισσότερα φύλλα συνολικά</b>
+            κερδίζει <b>+3 πόντους</b>.
+          </li>
+
+          <li>
+            <b>Pro tip:</b> Μερικές φορές <b>συμφέρει να χάσεις ένα μάζεμα</b>
+            ώστε να αφήσεις περισσότερα φύλλα στο τραπέζι και
+            να τα μαζέψεις όλα αργότερα, κερδίζοντας περισσότερους πόντους.
+          </li>
+
+          <li>
+            Τα <b>bonus φύλλα</b> (π.χ. <b>2♣</b>, <b>10♦</b>, φιγούρες και δεκάρια)
+            μπορούν να <b>κρίνουν το τελικό σκορ</b> — παίξε με στόχο, όχι τυχαία.
+          </li>
+        </ul>
+      </div>
+
+      
+      <div class="infoBlock">
+        <h4>👤 Δημιουργός</h4>
+        <ul>
+          <li><b>Όνομα:</b> Κούμπος Ματθαίος</li>
+          <li><b>Τμήμα:</b> Μηχανικών Πληροφορικής και Ηλεκτρονικών Συστημάτων</li>
+          <li><b>Ίδρυμα:</b> Διεθνές Πανεπιστήμιο της Ελλάδος</li>
+          <li><b>Περιοχή:</b> Σίνδος, Θεσσαλονίκη</li>
+          <li><b>Email:</b> man.koumpos@gmail.com</li>
+        </ul>
+      </div>
+      
+      <div class="infoFooter">
+        <button id="btnInfoCloseBottom" class="infoGlassBtn">Το κατάλαβα!</button>
+      </div>
+    </div> <!-- /infoBody -->
+  </div>   <!-- /infoCard -->
+</div>     <!-- /infoOverlay -->
+
+
+
+  <div class="topbar">
+    <div class="left">
+      <span class="pill">Ξερή • WebAPI Demo</span>
+      <span class="pill" id="pillAuth">not logged in</span>
+      <span class="pill" id="pillGame">game: -</span>
+      <span class="pill" id="pillTurn">turn: -</span>
+    </div>
+
+    <div class="right">
+      <input id="username" placeholder="username (π.χ. eva)" value="eva" />
+      <button class="btn-primary" id="btnLogin">Login</button>
+
+      <select id="turnSeconds" style="width:120px">
+      <option value="15">15s</option>
+      <option value="30">30s</option>
+      <option value="45">45s</option>
+      <option value="60" selected>60s</option>
+      <option value="90">90s</option>
+      <option value="120">120s</option>
+</select>
+      <button class="btn-ok" id="btnCreate">Create</button>
+      <input id="gameId" placeholder="game_id" />
+      <button class="btn-ok" id="btnJoin">Join</button>
+
+      <button id="btnRefresh">Refresh</button>
+      <button id="btnAuto">Auto: off</button>
+    </div>
+  </div>
+
+  <div class="gameLayout">
+
+  <!-- ΑΡΙΣΤΕΡΑ: ΠΑΙΧΝΙΔΙ -->
+  <div class="gameMain">
+    <div class="table">
+
+      <div class="row">
+        <!-- Opponent -->
+        <div class="playerPanel" id="oppPanel">
+          <div class="playerTitle">
+            <b>Αντίπαλος</b>
+            <span class="small" id="oppId">id: -</span>
+          </div>
+          <div class="stats" id="oppStats"></div>
+        </div>
+
+        <!-- Center -->
+        <div class="center">
+          <div class="pile">
+            <div class="stack" id="deckStack">
+              <div class="shadowCard"></div>
+                <div class="shadowCard"></div>
+
+                  <div class="card back">
+                    <div style="display:flex; align-items:center; justify-content:center; height:100%;">
+                      <div class="backText" id="deckCount">DECK</div>
+                    </div>
+                  </div>
+            </div>
+          <div class="pileLabel" id="deckLabel">Τράπουλα</div>
+        </div>
+
+          <div class="pile">
+            <div class="stack" id="tableStack">
+              <div class="shadowCard"></div>
+              <div class="shadowCard"></div>
+              <div id="tableTopCard"></div>
+            </div>
+            <div class="pileLabel" id="tableLabel">Τραπέζι: top / count</div>
+          </div>
+        </div>
+
+        <!-- Me -->
+        <div class="playerPanel" id="mePanel">
+          <div class="playerTitle">
+            <b>Εσύ</b>
+            <span class="small" id="meId">id: -</span>
+          </div>
+          <div class="stats" id="meStats"></div>
+        </div>
+      </div>
+
+      <div class="handArea">
+        <div class="handTop">
+          <div class="small">
+            Επιλογή κάρτας με κλικ → <span class="turnBadge" id="turnText">-</span>
+            <span id="finishText"></span>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="miniBadges">
+              <div id="gameMini" class="miniBadge" title="Game ID">
+                <span class="ico">🎮</span>
+                <span>Game</span>
+                <span id="gameMiniId">#--</span>
+              </div>
+
+              <!-- TIMER -->
+              <div id="turnTimer" class="timerBadge" title="Χρόνος για κίνηση">
+                ⏳ <span id="turnTimerText">--</span>
+              </div>
+            </div>
+
+  <button class="btn-primary" id="btnMove" disabled>Play selected</button>
+  <button class="btn-danger" id="btnResetUI">Clear</button>
+</div>
+
+        </div>
+
+        <div class="handCards" id="handCards">
+          <div class="handLockOverlay" id="handLockOverlay">
+            <span class="lockIcon">🔒</span>
+            <span class="lockText">Περίμενε τη σειρά σου</span>
+          </div>
+        </div>
+
+        <div class="msg info" id="msg">Κάνε Login → Create/Join → μετά παίξε.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ΔΕΞΙΑ: CHAT -->
+  <aside class="chatSidebar">
+    <div class="chatWrap">
+      <div class="chatHead">
+        <b>Chat</b>
+        <span class="small" id="chatStatus">—</span>
+      </div>
+
+      <div class="chatBox" id="chatBox">
+        <div class="typingBubble" id="typingIndicator" style="display:none;">
+          <span class="typingText" id="typingText">Ο/Η — πληκτρολογεί</span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+      </div>
+
+
+      <div class="chatSend">
+        <input id="chatInput" placeholder="Γράψε μήνυμα..." maxlength="240" />
+        <button id="btnChatSend" class="btn-primary sendIcon" title="Αποστολή">
+          ➤
+        </button>
+      </div>
+    </div>
+  </aside>
+  <!-- WIN OVERLAY -->
+<div id="winOverlay" class="winOverlay" style="display:none;">
+  <div id="fxLayer" class="heartsLayer"></div>
+  <div class="winCard">
+    <div class="winTitle" id="winTitle">Τέλος παιχνιδιού</div>
+    <div class="winSubtitle" id="winSubtitle">—</div>
+
+    <div class="winScoreRow">
+      <div class="winScoreBox">
+        <div class="winScoreLabel" id="winMeLabel">Εσύ</div>
+        <div class="winScoreVal" id="winMeScore">0</div>
+      </div>
+      <div class="winScoreBox">
+        <div class="winScoreLabel" id="winOppLabel">Αντίπαλος</div>
+        <div class="winScoreVal" id="winOppScore">0</div>
+      </div>
+    </div>
+
+    <div class="winActions">
+      <button class="btn-primary" id="btnWinOk">OK</button>
+      <button class="btn-ok" id="btnWinNew">Νέο παιχνίδι</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+</div>
+
+<script>
+  // ---- State ----
+  let TOKEN = null;
+  let PLAYER_ID = null;
+  let GAME_ID = null;
+  let SELECTED_CARD = null;
+  let AUTO = false;
+  let autoTimer = null;
+  let statePollTimer = null;
+  // ---- Chat state ----
+  let chatTimer = null;
+  let lastChatId = 0;
+
+  let lastBeepSecond = null;
+  // ---- Local countdown  ----
+  let localDeadline = null;      
+  let localMyTurn = false;
+  let localTickTimer = null;
+  let lastShownSecond = null;    
+  let typingPingTimer = null;
+  let lastTypingSentAt = 0;
+  // ---- Presence state ----
+  let presenceTimer = null;
+  let lastFinishKey = null;
+  // Deal animation guard
+  let LAST_DEAL_NO = -1;
+  let LAST_HAND_KEY = "";
+  let LAST_HAND_LEN = 0;
+
+
+// ===== Random login cards =====
+  const loginSuits = [
+    { sym:"♥", red:true },
+    { sym:"♦", red:true },
+    { sym:"♠", red:false },
+    { sym:"♣", red:false }
+  ];
+
+  const loginRanks = ["A","K","Q","J","10","9","8","7","6"];
+
+  function randomLoginCard(){
+    const s = loginSuits[Math.floor(Math.random()*loginSuits.length)];
+    const r = loginRanks[Math.floor(Math.random()*loginRanks.length)];
+    return { rank:r, sym:s.sym, red:s.red };
+  }
+
+const baseRot = [-14, -4, 8];
+const baseX   = [-40, -15, 0];
+const jitter  = () => (Math.random()*6 - 3);
+
+  function applyRandomLoginCards(){
+  const used = new Set();
+
+  document.querySelectorAll(".loginCard").forEach((card, i)=>{
+    let c, key;
+    do{
+      c = randomLoginCard();
+      key = c.rank + c.sym;
+    }while(used.has(key));
+    used.add(key);
+
+    card.classList.toggle("red", c.red);
+    card.classList.toggle("black", !c.red);
+
+    card.querySelectorAll(".corner").forEach(el=>{
+      el.innerHTML = `${c.rank} <span>${c.sym}</span>`;
+    });
+
+    card.querySelector(".centerSym").textContent = c.sym;
+
+    
+    card.style.transform =
+      `rotate(${baseRot[i] + jitter()}deg) translate(${baseX[i]}px, ${jitter()}px)`;
+  });
+}
+
+let loginCardTimer = null;
+
+function refreshLoginCardsAnimated(){
+  const cards = document.querySelectorAll(".loginCard");
+
+  // fade / flip out
+  cards.forEach(c => c.classList.add("flipOut"));
+
+  setTimeout(() => {
+    applyRandomLoginCards();   
+
+    // flip in
+    cards.forEach(c => {
+      c.classList.remove("flipOut");
+      c.classList.add("flipIn");
+    });
+
+    setTimeout(() => {
+      cards.forEach(c => c.classList.remove("flipIn"));
+    }, 600);
+
+  }, 350);
+}
+
+let heartsTimer = null;
+
+
+function clearFX(){
+  const layer = document.getElementById("fxLayer");
+  if (layer) layer.innerHTML = "";
+}
+
+function oneFX(symbol){
+  const layer = document.getElementById("fxLayer");
+  if(!layer) return;
+
+  layer.innerHTML = "";
+
+  const el = document.createElement("div");
+  el.className = "fxOne";
+  el.textContent = symbol;
+  layer.appendChild(el);
+
+  setTimeout(() => { layer.innerHTML = ""; }, 2100);
+}
+
+
+function startPresence(){
+  if (presenceTimer || !TOKEN || !GAME_ID) return;
+  presenceTimer = setInterval(() => {
+    api("api/presence_ping.php", "POST", { game_id: GAME_ID }).catch(()=>{});
+  }, 5000);
+}
+
+function stopPresence(){
+  if(!presenceTimer) return;
+  clearInterval(presenceTimer);
+  presenceTimer = null;
+}
+
+  function startStatePolling(ms = 1000){
+  if (statePollTimer) return;
+  statePollTimer = setInterval(refreshState, ms);
+}
+
+function stopStatePolling(){
+  if (!statePollTimer) return;
+  clearInterval(statePollTimer);
+  statePollTimer = null;
+}
+
+
+  function beep(){
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+
+      o.type = "sine";
+      o.frequency.value = 880;
+      g.gain.value = 0.06;
+
+      o.connect(g);
+      g.connect(ctx.destination);
+
+      o.start();
+      setTimeout(() => {
+        o.stop();
+        ctx.close();
+      }, 120);
+    }catch(e){}
+  }
+
+  function openInfo(){
+    $("body").addClass("info-open");
+    $("#infoOverlay").show().attr("aria-hidden","false");
+  }
+
+  function closeInfo(){
+    $("body").removeClass("info-open");
+    $("#infoOverlay").hide().attr("aria-hidden","true");
+  }
+
+  $("#btnInfoLobby").on("click", openInfo);
+  //$("#btnInfoClose").on("click", closeInfo);
+  $("#btnInfoCloseBottom").on("click", closeInfo);
+
+  $("#infoOverlay").on("click", function(e){
+    if (e.target === this) closeInfo();
+  });
+
+  $(document).on("keydown", function(e){
+    if (e.key === "Escape") closeInfo();
+  });
+
+  function dealHandAnimated(){
+    const deck = document.getElementById("deckStack");
+    const deckRect = deck.getBoundingClientRect();
+
+    document.querySelectorAll(".handCard").forEach((card, i)=>{
+      const r = card.getBoundingClientRect();
+
+      const dx = deckRect.left - r.left;
+      const dy = deckRect.top  - r.top;
+
+      card.style.setProperty("--from-x", dx + "px");
+      card.style.setProperty("--from-y", dy + "px");
+
+      card.style.animationDelay = (i * 160) + "ms";  
+      // ✅ force restart + add class
+      card.classList.remove("dealAnim");
+      void card.offsetWidth; // reflow trick
+      card.classList.add("dealAnim");
+    });
+  }
+
+
+
+  function showMsg(text, kind="info"){
+    $("#msg").removeClass("error ok info").addClass(kind).text(text);
+  }
+
+    function startLocalCountdown(){
+    if (localTickTimer) return;
+
+    localTickTimer = setInterval(() => {
+    // αν δεν έχουμε deadline, καθάρισε
+    if (!localDeadline) {
+      $("#turnTimer").addClass("hidden").removeClass("warn pulse");
+      $("#turnTimerText").text("--");
+      $("#mePanel, #oppPanel").removeClass("timerWarn timerPulse");
+      lastShownSecond = null;
+      return;
+    }
+
+      const now = Math.floor(Date.now() / 1000);
+      const remaining = Math.max(0, localDeadline - now);
+
+      // update UI μόνο όταν αλλάζει το δευτερόλεπτο
+      if (lastShownSecond !== remaining) {
+        lastShownSecond = remaining;
+
+        $("#turnTimer").removeClass("warn pulse hidden");
+        $("#turnTimerText").text(remaining);
+
+        if (remaining <= 10) $("#turnTimer").addClass("warn");
+        if (remaining <= 5) $("#turnTimer").addClass("pulse");
+
+        // καθάρισε και τα 2 panels κάθε tick
+        $("#mePanel, #oppPanel").removeClass("timerWarn timerPulse");
+
+        // panel που έχει τη σειρά (εσύ ή αντίπαλος)
+        const $activePanel = localMyTurn ? $("#mePanel") : $("#oppPanel");
+
+        if (remaining <= 10) $activePanel.addClass("timerWarn");
+        if (remaining <= 5)  $activePanel.addClass("timerPulse");
+
+        // beep 3..1 (μόνο μία φορά το κάθε δευτερόλεπτο)
+        if (remaining <= 3 && remaining > 0) {
+          if (lastBeepSecond !== remaining) {
+            lastBeepSecond = remaining;
+            beep();
+          }
+        } else {
+          lastBeepSecond = null;
+        }
+
+        // disable στο 0
+        if (remaining <= 0) {
+          $("#btnMove").prop("disabled", true);
+        } else {
+          // μόνο αν έχεις επιλέξει κάρτα
+          $("#btnMove").prop("disabled", !SELECTED_CARD);
+        }
+      }
+    }, 200); 
+  }
+
+
+  // ---- Card rendering helpers ----
+  function parseCard(code){
+    const suit = code.slice(-1);
+    const rank = code.slice(0, -1);
+    const sym = suit === "S" ? "♠" : suit === "H" ? "♥" : suit === "D" ? "♦" : "♣";
+    const isRed = (suit === "H" || suit === "D");
+    return { rank, suit, sym, colorClass: isRed ? "red" : "black" };
+  }
+
+  function cardHtml(code){
+    if (!code) return "";
+    const c = parseCard(code);
+    return `
+      <div class="card ${c.colorClass}">
+        <div class="corner">${c.rank}<span>${c.sym}</span></div>
+        <div class="centerSym">${c.sym}</div>
+        <div class="corner" style="justify-content:flex-end">${c.rank}<span>${c.sym}</span></div>
+      </div>
+    `;
+  }
+
+  function statsHtml(capt){
+    if (!capt) return `<div class="small">—</div>`;
+    const yesNo = v => v ? "✓" : "–";
+    return `
+      <div class="statBox">Μαζεμένα: <b>${capt.cards_count ?? 0}</b></div>
+      <div class="statBox">Ξερές: <b>${capt.xeri_count ?? 0}</b></div>
+      <div class="statBox">Ξερές με J: <b>${capt.xeri_jack_count ?? 0}</b></div>
+      <div class="statBox">2♣: <b>${yesNo(capt.has_2C)}</b></div>
+      <div class="statBox">10♦: <b>${yesNo(capt.has_10D)}</b></div>
+      <div class="statBox">A/K/Q/J/10: <b>${capt.face10_count ?? 0}</b></div>
+    `;
+  }
+
+  
+  function api(url, method="GET", body=null){
+    const opts = {
+      url,
+      method,
+      dataType: "json",
+      headers: {}
+    };
+    if (TOKEN) opts.headers["Authorization"] = "Bearer " + TOKEN;
+    if (body !== null){
+      opts.contentType = "application/json; charset=utf-8";
+      opts.data = JSON.stringify(body);
+    }
+    return $.ajax(opts);
+  }
+
+  function escapeHtml(s){
+  return String(s)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function formatTime(iso){
+  // iso από server (π.χ. 2025-12-27 17:30:12)
+  return iso ? iso.slice(11,16) : "";
+}
+
+function smartWrapText(text){
+  let t = String(text ?? "")
+    .replace(/\s*\n+\s*/g, " ")
+    .trim();
+
+  t = t.replace(/\s+(?=\S{18,})/g, "\u00A0");
+
+  return t;
+}
+
+async function fetchChat(){
+  try{
+    if(!TOKEN || !GAME_ID) return;
+
+    const res = await api(`api/chat_get.php?game_id=${GAME_ID}&after_id=${lastChatId}`, "GET");
+    const msgs = Array.isArray(res.messages) ? res.messages : [];
+
+    if (msgs.length){
+      const $box = $("#chatBox");
+      const atBottom = ($box[0].scrollHeight - $box.scrollTop() - $box.outerHeight()) < 30;
+
+      for (const m of msgs){
+        lastChatId = Math.max(lastChatId, m.id);
+        const mine = (String(m.player_id) === String(PLAYER_ID));
+        const who = mine ? "Εγώ" : (m.username || "Αντίπαλος");
+        $("#typingIndicator").before(`
+        <div class="chatMsg ${mine ? "me" : ""}">
+          ${escapeHtml(smartWrapText(m.text))}
+          <span class="chatMeta">${escapeHtml(who)} • ${escapeHtml(formatTime(m.created_at))}</span>
+        </div>
+        `);
+      }
+
+      if (atBottom) $box.scrollTop($box[0].scrollHeight);
+    }
+
+    $("#chatStatus").text("updated");
+
+    await fetchTyping();
+  }catch(e){
+    $("#chatStatus").text("chat error");
+  }
+}
+
+async function sendChat(){
+  try{
+    if(!TOKEN) return showMsg("Κάνε Login πρώτα.", "error");
+    if(!GAME_ID) return showMsg("Κάνε Create/Join πρώτα.", "error");
+
+    const text = $("#chatInput").val().trim();
+    if(!text) return;
+
+    $("#typingIndicator").hide();
+
+    $("#btnChatSend").prop("disabled", true);
+    await api("api/chat_post.php", "POST", { game_id: GAME_ID, text });
+
+    $("#chatInput").val("");
+    await fetchChat(); 
+  }catch(e){
+    showMsg(`Chat send failed: ${e.responseText || e.statusText}`, "error");
+  }finally{
+    $("#btnChatSend").prop("disabled", false);
+  }
+}
+
+async function doRematch(){
+  try{
+    if(!TOKEN || !GAME_ID) return;
+
+    $("#btnWinNew").prop("disabled", true);
+
+    const res = await api("api/rematch.php", "POST", { game_id: GAME_ID });
+
+    
+    if (res.waiting_for_other){
+      showMsg("Στάλθηκε αίτημα για rematch. Περιμένουμε τον αντίπαλο…", "info");
+      await refreshState();  
+      return;
+    }
+
+    // αν ξεκίνησε νέος γύρος (status active)
+    showMsg("Νέος γύρος! 🎮", "ok");
+    hideWinOverlay();
+
+    SELECTED_CARD = null;
+    $("#btnMove").prop("disabled", true);
+    $(".handCard").removeClass("selected");
+
+    await refreshState();
+  }catch(e){
+    showMsg(
+      `Rematch failed: ${e.responseJSON?.error || e.responseText || e.statusText}`,
+      "error"
+    );
+  }finally{
+    $("#btnWinNew").prop("disabled", false);
+  }
+}
+
+
+$("#btnWinNew").on("click", doRematch);
+
+function startChatPolling(){
+  if (chatTimer) return;
+  chatTimer = setInterval(fetchChat, 800); // ίδια λογική με auto refresh
+}
+
+function showWinOverlay(st){
+  const finishKey = `${st.game_id}:${st.result?.winner ?? "draw"}:${st.live?.me?.score ?? 0}:${st.live?.opponent?.score ?? 0}`;
+  const isSameFinish = (finishKey === lastFinishKey);
+  if (!isSameFinish) lastFinishKey = finishKey;
+  const meName = st.me?.username || "Εσύ";
+  const oppName = st.opponent?.username || "Αντίπαλος";
+  const meScore = st.live?.me?.score ?? 0;
+  const oppScore = st.live?.opponent?.score ?? 0;
+
+  $("#winMeLabel").text(meName);
+  $("#winOppLabel").text(oppName);
+  $("#winMeScore").text(meScore);
+  $("#winOppScore").text(oppScore);
+
+  // winner logic
+  const winner = st.result?.winner ?? null; 
+  const $card = $("#winOverlay .winCard");
+  $card.removeClass("winMe winOpp winDraw");
+
+  $("#winOverlay").removeClass("celebrate");
+  clearFX();
+
+
+if (!winner || winner === "draw") {
+  $("#winTitle").text("Ισοπαλία!");
+  $("#winSubtitle").text("Κανείς δεν κέρδισε αυτή τη φορά.");
+  $card.addClass("winDraw");
+  $("#winOverlay").removeClass("celebrate");
+  if (!isSameFinish){ clearFX(); /* προαιρετικά */ }
+} 
+else if (String(winner) === String(PLAYER_ID)) {
+  $("#winTitle").html(`Νίκησες! <span class="trophy">🏆</span>`);
+  $("#winSubtitle").text("Μπράβο! Έκανες την καλύτερη δουλειά.");
+  $card.addClass("winMe");
+  $("#winOverlay").addClass("celebrate");
+  if (!isSameFinish) oneFX("🎉");   // ✅ ΜΙΑ ΦΟΡΑ
+} 
+else {
+  $("#winTitle").html(`Έχασες <span class="loseEmoji">😕</span>`);
+  $("#winSubtitle").text("Καλή προσπάθεια — πάμε ξανά!");
+  $card.addClass("winOpp");
+  $("#winOverlay").removeClass("celebrate");
+  if (!isSameFinish) oneFX("💔");   // ✅ ΜΙΑ ΦΟΡΑ
+}
+$("#winOverlay").show();
+}
+
+
+
+
+
+function hideWinOverlay(){
+  clearFX();
+  lastFinishKey = null;
+  $("#winOverlay").removeClass("celebrate").hide();
+}
+
+function showScreen(name){
+  stopStatePolling();
+  $("#screenAuth, #screenLobby, #screenWaiting").hide();
+
+  if (name === "auth"){
+    applyRandomLoginCards();   
+    $("#screenAuth").show();
+  }
+  if (name === "lobby") $("#screenLobby").show();
+  if (name === "waiting") $("#screenWaiting").show();
+}
+
+function updateLobbyUI(){
+  const u = $("#username").val().trim() || "guest";
+  $("#lobbyUser").text(u);
+  $("#lobbyTurnSeconds").val($("#turnSeconds").val());
+  $("#lobbyCreateHint, #lobbyJoinHint, #lobbyHint").text("—");
+}
+
+function enterGameUI(){
+  $("#screenAuth, #screenLobby, #screenWaiting").hide();
+  startPresence();
+}
+
+
+function resetGameState(){
+  stopStatePolling();
+
+  GAME_ID = null;
+  SELECTED_CARD = null;
+  localDeadline = null;
+  localMyTurn = false;
+
+  // καθάρισε UI
+  $("#pillGame").text("game: -");
+  $("#pillTurn").text("turn: -");
+  $("#gameMiniId").text("#--");
+
+  $("#handCards").empty();
+  $("#tableTopCard").empty();
+  $("#deckCount").text("DECK");
+  $("#tableLabel").text("Τραπέζι");
+
+  $("#meStats, #oppStats").empty();
+  $("#finishText").text("");
+  $("#btnMove").prop("disabled", true);
+
+  // chat reset
+  lastChatId = 0;
+  $("#chatBox .chatMsg").remove();
+  $("#typingIndicator").hide();
+  lastFinishKey = null;
+
+  hideWinOverlay();
+
+  LAST_DEAL_NO = -1;
+  LAST_HAND_KEY = "";
+  LAST_HAND_LEN = 0;
+
+}
+
+
+function logout(){
+  stopPresence();
+  stopStatePolling(); 
+  TOKEN = null;
+  PLAYER_ID = null;
+  GAME_ID = null;
+  SELECTED_CARD = null;
+
+  $("#pillAuth").text("not logged in");
+  $("#pillGame").text("game: -");
+  $("#pillTurn").text("turn: -");
+
+  // clear chat
+  lastChatId = 0;
+  $("#chatBox .chatMsg").remove();
+  $("#typingIndicator").hide();
+  lastFinishKey = null;
+
+  LAST_DEAL_NO = -1;
+  LAST_HAND_KEY = "";
+  LAST_HAND_LEN = 0;
+
+
+
+  hideWinOverlay(); 
+  showScreen("auth");
+}
+
+
+
+  // ---- Actions ----
+  async function doLogin(){
+  try{
+    const username = $("#username").val().trim();
+    if(!username){
+      showMsg("Δώσε username.", "error");
+      return false;
+    }
+
+    const res = await api("api/login.php", "POST", { username });
+    TOKEN = res.token;
+    PLAYER_ID = res.player_id;
+
+    $("#pillAuth").text(`player_id=${PLAYER_ID} (token ok)`);
+    $("#meId").text(`id: ${PLAYER_ID}`);
+    showMsg("Login OK.", "ok");
+
+    return true;
+  }catch(e){
+    showMsg(`Login failed: ${e.responseText || e.statusText}`, "error");
+    return false;
+  }
+}
+
+  async function doCreate(){
+  try{
+    if(!TOKEN) return showMsg("Κάνε Login πρώτα.", "error");
+
+    const turn_seconds = parseInt($("#lobbyTurnSeconds").val(), 10) || 60;
+    const target_score = parseInt($("#lobbyTargetScore").val(), 10) || 51;
+
+    const res = await api("api/games.php", "POST", { turn_seconds, target_score });
+
+    GAME_ID = res.game_id;
+    $("#gameId").val(GAME_ID);
+    $("#pillGame").text(`game: ${GAME_ID}`);
+
+    lastChatId = 0;
+    $("#chatBox .chatMsg").remove();
+    $("#typingIndicator").hide();
+    $("#typingText").text("Ο/Η — πληκτρολογεί");
+
+    showMsg(`Create OK. Game ${GAME_ID} (waiting).`, "ok");
+    await refreshState();
+  }catch(e){
+    showMsg(`Create failed: ${e.responseText || e.statusText}`, "error");
+  }
+}
+
+
+  async function doJoin(gidArg=null){
+  try{
+    if(!TOKEN) return showMsg("Κάνε Login πρώτα.", "error");
+
+    const gid = gidArg ?? parseInt($("#gameId").val(), 10);
+    if(!gid) return showMsg("Δώσε game_id για Join.", "error");
+
+    const res = await api("api/join.php", "POST", { game_id: gid });
+
+    GAME_ID = gid;
+    $("#pillGame").text(`game: ${GAME_ID}`);
+
+    // reset chat για νέο παιχνίδι
+    lastChatId = 0;
+    $("#chatBox .chatMsg").remove();
+    $("#typingIndicator").hide();
+    $("#typingText").text("Ο/Η — πληκτρολογεί");
+
+    showMsg(`Join OK. Game ${GAME_ID} είναι ${res.status}.`, "ok");
+    await refreshState();
+    return true;
+  }catch(e){
+    showMsg(`Join failed: ${e.responseText || e.statusText}`, "error");
+    return false;
+  }
+}
+
+
+  async function refreshState(){
+    try{
+      if(!TOKEN) return;
+      const gid = GAME_ID ?? parseInt($("#gameId").val(), 10);
+      if(!gid) return;
+      GAME_ID = gid;
+
+      const st = await api(`api/state.php?game_id=${GAME_ID}`, "GET");
+      renderState(st);
+    }catch(e){
+      showMsg(`Refresh failed: ${e.responseText || e.statusText}`, "error");
+    }
+  }
+
+  async function doMove(){
+    try{
+      if(!TOKEN) return showMsg("Κάνε Login πρώτα.", "error");
+      if(!GAME_ID) return showMsg("Κάνε Create/Join πρώτα.", "error");
+      if(!SELECTED_CARD) return showMsg("Διάλεξε κάρτα από το χέρι σου.", "error");
+
+      const res = await api("api/move.php", "POST", { game_id: GAME_ID, card: SELECTED_CARD });
+      showMsg(
+        `Έπαιξες ${SELECTED_CARD}. capture=${res.capture} next_turn=${res.next_turn}` +
+        (res.xeri ? " • ΞΕΡΗ!" : "") +
+        (res.xeri_with_jack ? " • ΞΕΡΗ με ΒΑΛΕ!" : ""),
+        "ok"
+      );
+      SELECTED_CARD = null;
+      $("#btnMove").prop("disabled", true);
+      await refreshState();
+    }catch(e){
+      showMsg(`Move failed: ${e.responseJSON?.error ? e.responseJSON.error : (e.responseText || e.statusText)}`, "error");
+      await refreshState();
+    }
+  }
+
+  async function sendTypingPing(){
+  try{
+    if(!TOKEN || !GAME_ID) return;
+
+    const now = Date.now();
+    if (now - lastTypingSentAt < 900) return; // max ~1 φορά/δευτ
+    lastTypingSentAt = now;
+
+    await api("api/chat_typing.php", "POST", { game_id: GAME_ID });
+  }catch(e){}
+}
+
+async function fetchTyping(){
+  try{
+    if(!TOKEN || !GAME_ID) return;
+
+    const res = await api(`api/chat_typing_get.php?game_id=${GAME_ID}`, "GET");
+
+    if (res.typing && String(res.player_id) !== String(PLAYER_ID)){
+      const username = res.username || "Αντίπαλος";
+
+      $("#typingText").text(`Ο/Η ${username} πληκτρολογεί`);
+      $("#typingIndicator").show();
+
+      const $box = $("#chatBox");
+      $box.scrollTop($box[0].scrollHeight);
+    } else {
+      $("#typingIndicator").hide();
+    }
+  }catch(e){
+    $("#typingIndicator").hide();
+  }
+}
+
+async function fetchWaitingGames(){
+  try{
+    if(!TOKEN) return;
+
+    $("#waitingHint").text("Loading...");
+    const res = await api("api/games_waiting.php?limit=20", "GET");
+    const games = Array.isArray(res.games) ? res.games : [];
+
+    const $list = $("#waitingList");
+    $list.empty();
+
+    if(!games.length){
+      $list.append(`<div class="small" style="opacity:.8;">Δεν υπάρχουν waiting τραπέζια.</div>`);
+      $("#waitingHint").text("—");
+      return;
+    }
+
+    for(const g of games){
+      const gid = g.game_id;
+      const host = g.host_username || `player ${g.player1_id || ""}`;
+
+      const ts = g.turn_seconds ?? "-";
+      const target = g.target_score ?? "-";
+
+      $list.append(`
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;
+              border:1px solid rgba(255,255,255,.16);
+              background: rgba(255,255,255,.06);
+              padding:10px; border-radius:12px;">
+              
+            <div style="min-width:0;">
+              <div style="font-weight:800;">Game #${gid}</div>
+              <div class="small" style="opacity:.8;">
+                👤 Host: ${escapeHtml(host)} • ⏱ Χρόνος: ${escapeHtml(String(ts))}s • 🎯 Σκορ νίκης: ${escapeHtml(String(target))}
+              </div>
+            </div>
+
+          <button class="btn-ok btnJoinWaiting" data-gid="${gid}" style="white-space:nowrap;">
+            Join
+          </button>
+        </div>
+      `);
+    }
+
+    $("#waitingHint").text(`Found: ${games.length}`);
+  }catch(e){
+    $("#waitingHint").text("List error");
+  }
+}
+
+
+
+  // ---- Render ----
+  function renderState(st){
+    
+    if (GAME_ID) startChatPolling();
+    
+    $("#pillGame").text(`game: ${st.game_id}`);
+    $("#gameMiniId").text(`#${st.game_id}`);
+    $("#pillTurn").text(`turn: ${st.turn_player}`);
+
+    // turn text
+    $("#turnText").text(st.my_turn ? "Η σειρά σου" : "Περίμενε (σειρά αντιπάλου)");
+    
+    if (st.status === "waiting" || st.status === "active" || st.status === "finished") {
+      startStatePolling(1000);
+    } else {
+      stopStatePolling();
+    }
+   // ---- Highlight παίκτη που έχει σειρά ----
+  
+  $("#mePanel, #oppPanel").removeClass("activeTurn inactiveTurn");
+
+  if (st.status !== "active" || st.result?.finished || !st.opponent?.player_id) {
+  
+  } else if (st.my_turn) {
+    $("#mePanel").addClass("activeTurn");
+    $("#oppPanel").addClass("inactiveTurn");
+  } else {
+    $("#oppPanel").addClass("activeTurn");
+    $("#mePanel").addClass("inactiveTurn");
+  }
+
+  // ---- Disable Play όταν δεν επιτρέπεται ----
+  const remaining = st.timer?.remaining ?? null;
+  const timeUp = (remaining !== null && remaining <= 0);
+
+  $("#btnMove").prop(
+    "disabled",
+    !st.my_turn || !SELECTED_CARD || timeUp
+  );
+
+
+
+    // ⛔ καθάρισμα αν δεν είναι η σειρά σου
+    if(!st.my_turn){
+      SELECTED_CARD = null;
+      $(".handCard").removeClass("selected");
+      $("#btnMove").prop("disabled", true);
+    }
+
+    // ---- TIMER (smooth local countdown) ----
+    const deadline = st.timer?.turn_deadline ?? null;
+
+    localDeadline = deadline;       
+    localMyTurn = !!st.my_turn;     
+
+    
+    startLocalCountdown();
+
+    
+    if (!deadline || st.result?.finished) {
+      localDeadline = null;
+      localMyTurn = false;
+      $("#turnTimer").addClass("hidden").removeClass("warn pulse");
+      $("#turnTimerText").text("--");
+      lastBeepSecond = null;
+      lastShownSecond = null;
+    }
+   
+
+
+    
+    if (st.result?.finished) {
+    $("#finishText").html(
+      ` • <span class="finishBadge">Τέλος παιχνιδιού</span> • winner: ${st.result.winner ?? "ισοπαλία"}`
+    );
+
+    showWinOverlay(st);
+
+    // ===== REMATCH / PRESENCE MESSAGES =====
+    if (st.rematch && st.players){
+      const iAmP1 = String(PLAYER_ID) === String(st.players.p1);
+      const myReady  = iAmP1 ? (st.rematch.p1_ready === 1) : (st.rematch.p2_ready === 1);
+      const oppReady = iAmP1 ? (st.rematch.p2_ready === 1) : (st.rematch.p1_ready === 1);
+
+      const oppName = st.opponent?.username || "Αντίπαλος";
+
+      if (st.presence?.opponent_left){
+        $("#winSubtitle").text(
+          `Ο/Η ${oppName} έχει αποχωρήσει. Δεν μπορεί να ξεκινήσει rematch.`
+        );
+        $("#btnWinNew").prop("disabled", true);
+      } else {
+        $("#btnWinNew").prop("disabled", false);
+
+        if (oppReady && !myReady){
+          $("#winSubtitle").text(
+            `Ο/Η ${oppName} ζήτησε rematch. Πάτα «Νέο παιχνίδι» για να ξεκινήσει!`
+          );
+        } else if (myReady && !oppReady){
+          $("#winSubtitle").text(
+            `Περιμένουμε τον/την ${oppName} να πατήσει «Νέο παιχνίδι»…`
+          );
+        }
+      }
+    }
+
+  } else {
+    $("#finishText").text("");
+    hideWinOverlay();
+  }
+
+
+    const myLive = st.live?.me?.score ?? 0;
+    const oppLive = st.live?.opponent?.score ?? 0;
+
+    // opponent
+    $("#oppId").text(st.opponent?.username ?? "-");
+    $("#oppStats").html(
+      `<div class="statBox"><b>Score:</b> ${oppLive}</div>` +
+    statsHtml(st.opponent?.captures)
+  );
+
+    // me
+    $("#meId").text(st.me?.username ?? "-");
+    $("#meStats").html(
+      `<div class="statBox"><b>Score:</b> ${myLive}</div>` +
+    statsHtml(st.me?.captures)
+  );
+
+
+
+    // table top
+    const top = st.table?.top ?? null;
+    const count = st.table?.count ?? 0;
+
+    $("#tableLabel").text(`Τραπέζι: ${top ?? "-"} / count=${count}`);
+    $("#tableStack").toggleClass("hasStack", count > 1);
+
+    const tableCards = Array.isArray(st.table?.cards) ? st.table.cards : []; // ΘΕΛΕΙ cards[]
+    const shown = tableCards.slice(0, 4); // δείξε μέχρι 4
+
+
+
+$("#tableLabel").text(`Τραπέζι: ${shown[0] ?? "-"} / count=${count}`);
+$("#tableStack").toggleClass("hasStack", count > 1);
+
+if (!shown.length) {
+  $("#tableTopCard").html(
+    `<div class="card" style="opacity:.35; display:flex; align-items:center; justify-content:center;">—</div>`
+  );
+} else {
+  $("#tableTopCard").html(
+    shown.map((code, i) => `
+      <div class="stackCard" style="--i:${i}">
+        ${cardHtml(code)}
+      </div>
+    `).join("")
+  );
+}
+
+    // deck count from API
+    const dc = st.deck?.count ?? null;
+    $("#deckCount").text(dc !== null ? String(dc) : "DECK");
+    $("#deckLabel").text(dc !== null ? `Τράπουλα: ${dc}` : "Τράπουλα");
+  $("#deckStack").toggleClass("hasStack", (dc ?? 0) > 1);
+    // ---- HAND ----
+const hand = Array.isArray(st.me?.hand) ? st.me.hand : [];
+const handKey = hand.join(",");
+const handLen = hand.length;
+const dealNo  = (st.deal_no ?? 0);
+
+const overlay = `
+  <div class="handLockOverlay" id="handLockOverlay">
+    <span class="lockIcon">🔒</span>
+    <span class="lockText">Περίμενε τη σειρά σου</span>
+  </div>
+`;
+
+
+const handChanged   = (handKey !== LAST_HAND_KEY);
+const justRefilled  = (LAST_HAND_LEN === 0 && handLen === 6);
+const newDeal       = (dealNo !== LAST_DEAL_NO);
+
+if (handChanged || newDeal || justRefilled) {
+  LAST_HAND_KEY = handKey;
+  LAST_HAND_LEN = handLen;
+
+  const html = hand.map(code => {
+    const selected = (code === SELECTED_CARD) ? "selected" : "";
+    return `
+      <div class="handCard ${selected}" data-card="${code}">
+        ${cardHtml(code)}
+      </div>
+    `;
+  }).join("");
+
+  //$("#handCards").html(overlay + html);
+  $("#handCards").html(html + overlay);
+
+  
+  if (newDeal || justRefilled) {
+    LAST_DEAL_NO = dealNo;
+    requestAnimationFrame(() => dealHandAnimated());
+  }
+} else {
+  LAST_HAND_LEN = handLen;
+}
+
+
+$("#handCards").toggleClass(
+  "locked",
+  !st.my_turn && !st.result?.finished
+);
+
+
+    // status help
+    if(st.status === "waiting"){
+      showMsg("Το παιχνίδι είναι σε waiting. Θέλει Join από 2ο παίκτη.", "info");
+    }
+  }
+
+  // ---- UI events ----
+  $("#btnLogin").on("click", doLogin);
+  $("#btnCreate").on("click", doCreate);
+  $("#btnJoin").on("click", doJoin);
+  $("#btnRefresh").on("click", refreshState);
+
+  $("#btnMove").on("click", doMove);
+  $("#btnResetUI").on("click", () => {
+    SELECTED_CARD = null;
+    $("#btnMove").prop("disabled", true);
+    $(".handCard").removeClass("selected");
+    showMsg("Καθαρίστηκε η επιλογή κάρτας.", "info");
+  });
+
+  $("#handCards").on("click", ".handCard", function(){
+    if ($("#handCards").hasClass("locked")) return;
+    const code = $(this).data("card");
+    SELECTED_CARD = code;
+    $(".handCard").removeClass("selected");
+    $(this).addClass("selected");
+    $("#btnMove").prop("disabled", !localMyTurn);
+    showMsg(`Επέλεξες: ${code}. Πάτα "Play selected".`, "info");
+  });
+
+  $("#btnAuto").on("click", () => {
+    AUTO = !AUTO;
+    $("#btnAuto").text("Auto: " + (AUTO ? "on" : "off"));
+    if(AUTO){
+      autoTimer = setInterval(refreshState, 800);
+      showMsg("Auto refresh ενεργό (κάθε ~0.8s).", "info");
+    }else{
+      clearInterval(autoTimer);
+      autoTimer = null;
+      showMsg("Auto refresh απενεργοποιήθηκε.", "info");
+    }
+  });
+
+  
+  $("#username").on("keydown", (e) => { if(e.key === "Enter") doLogin(); });
+  $("#gameId").on("keydown", (e) => { if(e.key === "Enter") doJoin(); });
+
+  // ---- Chat UI events ----
+  $("#btnChatSend").on("click", sendChat);
+
+  $("#chatInput").on("keydown", (e) => {
+    if (e.key === "Enter") sendChat();
+  });
+
+  $("#chatInput").on("input", () => {
+  
+  clearTimeout(typingPingTimer);
+  typingPingTimer = setTimeout(sendTypingPing, 200);
+});
+
+// ---- Screen events ----
+$("#btnAuthLogin").on("click", async () => {
+  const u = $("#authUsername").val().trim();
+  if (!u) { $("#authHint").text("Δώσε username."); return; }
+
+  $("#username").val(u);
+  await doLogin();
+
+  if (TOKEN){
+    $("#authHint").text("OK!");
+    updateLobbyUI();
+    showScreen("lobby");
+  } else {
+    $("#authHint").text("Login failed.");
+  }
+});
+
+$("#btnAuthGuest").on("click", async () => {
+  const guest = "guest" + Math.floor(Math.random()*9000+1000);
+  $("#authUsername").val(guest);
+  $("#username").val(guest);
+
+  await doLogin();
+
+  if (TOKEN){
+    updateLobbyUI();
+    showScreen("lobby");
+  } else {
+    $("#authHint").text("Guest login failed.");
+  }
+});
+
+$("#btnLobbyCreate").on("click", async () => {
+  $("#turnSeconds").val($("#lobbyTurnSeconds").val());
+  await doCreate();
+
+  if (GAME_ID){
+    enterGameUI();
+  } else {
+    $("#lobbyCreateHint").text("Create failed.");
+  }
+});
+
+$("#btnLobbyJoin").on("click", async () => {
+  const gid = $("#lobbyGameId").val().trim();
+  $("#gameId").val(gid);
+
+  await doJoin();
+
+  if (GAME_ID){
+    enterGameUI();
+  } else {
+    $("#lobbyJoinHint").text("Join failed.");
+  }
+});
+
+$("#btnLobbyLogout").on("click", logout);
+
+$("#btnLobbyBrowse").on("click", async () => {
+  showScreen("waiting");
+  await fetchWaitingGames();
+});
+
+$("#btnWaitingRefresh").on("click", fetchWaitingGames);
+
+$("#btnWaitingBack").on("click", () => {
+  showScreen("lobby");
+});
+
+
+$("#waitingList").on("click", ".btnJoinWaiting", async function(){
+  const gid = parseInt($(this).data("gid"), 10);
+  if(!gid) return;
+
+  
+  const ok = await doJoin(gid);
+
+  if(ok){
+
+    enterGameUI();
+  }
+});
+
+$("#gameMini").on("click", async () => {
+  if(!GAME_ID) return;
+  try{
+    await navigator.clipboard.writeText(String(GAME_ID));
+    showMsg(`Αντιγράφηκε το Game ID: ${GAME_ID}`, "info");
+  }catch(e){
+    showMsg(`Game ID: ${GAME_ID}`, "info");
+  }
+});
+
+$("#btnWinOk").on("click", async () => {
+  try{
+    if (TOKEN && GAME_ID){
+      await api("api/presence_leave.php", "POST", { game_id: GAME_ID });
+    }
+  }catch(e){}
+
+  stopPresence();
+  resetGameState();
+  updateLobbyUI();
+  showScreen("lobby");
+});
+
+  applyRandomLoginCards();
+  refreshLoginCardsAnimated();
+
+loginCardTimer = setInterval(
+  refreshLoginCardsAnimated,
+  3500                              
+);
+
+</script>
+</body>
+</html>
